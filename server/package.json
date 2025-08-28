@@ -1,0 +1,28 @@
+{
+  "name": "image-generator-server",
+  "version": "1.0.0",
+  "description": "Optimized server for AI image generation",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "watch": "nodemon src/server.ts",
+    "lint": "eslint src/**/*.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@google/genai": "^1.16.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "mime": "^4.0.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/mime": "^4.0.0",
+    "@types/node": "^24.3.0",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
