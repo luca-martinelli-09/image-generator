@@ -73,29 +73,32 @@ export default function ImageUploader({ images, setImages, onImageClick }: Props
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   return (
-    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-lg">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
-        📸 Source Images
+    <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 shadow-lg">
+      <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Source Images
       </h3>
 
       <div
         {...getRootProps()}
-        className="border-2 border-dashed border-indigo-300 dark:border-indigo-600 hover:border-indigo-400 dark:hover:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-50/80 dark:hover:bg-indigo-900/30 rounded-xl p-8 text-center cursor-pointer transition-all duration-300 group"
+        className="border-2 border-dashed border-gray-600 hover:border-gray-500 bg-gray-950/30 hover:bg-gray-950/50 rounded-xl p-8 text-center cursor-pointer transition-all duration-300 group"
       >
         <input {...getInputProps()} />
         <div className="space-y-3">
-          <div className="text-4xl group-hover:scale-110 transition-transform duration-300">
-            📁
-          </div>
+          <svg className="w-12 h-12 mx-auto text-gray-400 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
           <div>
-            <p className="text-slate-700 dark:text-slate-300 font-medium">
+            <p className="text-white font-medium">
               Drag & drop images here
             </p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            <p className="text-gray-400 text-sm mt-1">
               or click to browse • Paste with Ctrl+V
             </p>
           </div>
-          <div className="text-xs text-slate-400 dark:text-slate-500">
+          <div className="text-xs text-gray-500">
             Supports: JPG, PNG, GIF, WebP
           </div>
         </div>
@@ -104,10 +107,10 @@ export default function ImageUploader({ images, setImages, onImageClick }: Props
       {images.length > 0 && (
         <div className="mt-6">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+            <span className="text-sm font-medium text-gray-300">
               {images.length} image{images.length !== 1 ? "s" : ""} uploaded
             </span>
-            <span className="text-xs text-slate-400 dark:text-slate-500">Drag to reorder</span>
+            <span className="text-xs text-gray-500">Drag to reorder</span>
           </div>
 
           <Reorder.Group

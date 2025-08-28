@@ -15,27 +15,11 @@ function App() {
   const [outputs, setOutputs] = useState<OutputFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
-  const [isDark, setIsDark] = useState(false);
   const [viewerImage, setViewerImage] = useState<string | null>(null);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
-    }
+    document.documentElement.classList.add('dark');
   }, []);
-
-  const toggleTheme = () => {
-    const newTheme = !isDark;
-    setIsDark(newTheme);
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
-    if (newTheme) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
 
   const generate = async () => {
     setLoading(true);
@@ -66,21 +50,12 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 transition-colors duration-300">
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="flex justify-between items-center mb-6">
-            <div></div>
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 transition-colors duration-200"
-            >
-              {isDark ? '☀️' : '🌙'}
-            </button>
-          </div>
-          <h1 className="text-5xl font-bold mb-4 text-slate-900 dark:text-white">AI Image Generator</h1>
-          <p className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
+          <h1 className="text-5xl font-bold mb-4 text-white">AI Image Generator</h1>
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Transform your ideas into stunning visuals with the power of AI
           </p>
         </div>
@@ -99,7 +74,7 @@ function App() {
             <button
               onClick={generate}
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 dark:bg-indigo-500 dark:hover:bg-indigo-600 dark:disabled:bg-slate-600 text-white font-medium py-4 px-8 rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+              className="w-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 text-white font-medium py-4 px-8 rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center justify-center space-x-2">
@@ -112,9 +87,11 @@ function App() {
             </button>
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 px-6 py-4 rounded-xl backdrop-blur-sm">
+              <div className="bg-red-900/20 border border-red-800 text-red-300 px-6 py-4 rounded-xl backdrop-blur-sm">
                 <div className="flex items-center space-x-2">
-                  <span className="text-red-500">⚠️</span>
+                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
                   <div>
                     <strong className="font-semibold">Error:</strong>
                     <p className="mt-1">{error}</p>
@@ -126,13 +103,15 @@ function App() {
 
           {/* Output Section */}
           <div className="space-y-6">
-            <h3 className="text-2xl font-semibold text-slate-800 dark:text-slate-200">
+            <h3 className="text-2xl font-semibold text-white">
               Generated Images
             </h3>
             {outputs.length === 0 ? (
-              <div className="bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-12 text-center">
-                <div className="text-6xl mb-4">🎨</div>
-                <p className="text-slate-500 dark:text-slate-400 text-lg">
+              <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-12 text-center">
+                <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-gray-400 text-lg">
                   Your generated images will appear here
                 </p>
               </div>
@@ -141,7 +120,7 @@ function App() {
                 {outputs.map((out) => (
                   <div
                     key={out.filename}
-                    className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 relative group"
+                    className="bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 relative group"
                   >
                     <div className="relative overflow-hidden rounded-xl mb-4 cursor-pointer" onClick={() => setViewerImage(`data:${out.mimeType};base64,${out.base64}`)}>
                       <img

@@ -1,45 +1,42 @@
-import { useState } from "react";
-
 interface Props {
   prompt: string;
   setPrompt: (val: string) => void;
 }
 
 export default function PromptEditor({ prompt, setPrompt }: Props) {
-  const [focused, setFocused] = useState(false);
-
   const examplePrompts: string[] = [];
 
   return (
-    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-lg">
-      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
+    <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 shadow-lg">
+      <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+        <svg
+          className="w-5 h-5 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+          />
+        </svg>
         Describe Your Vision
       </h3>
 
-      <div className="relative">
-        <div className={`relative rounded-xl transition-all duration-300 ${
-          focused ? 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-0.5' : ''
-        }`}>
+      <div className="relative flex">
+        <div className="w-full bg-gradient-to-r from-blue-500 via-yellow-500 to-red-500 p-2 rounded-2xl">
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            className={`w-full p-4 rounded-xl resize-none transition-all duration-300 focus:outline-none ${
-              focused
-                ? "bg-white dark:bg-slate-900 shadow-lg border-0"
-                : "border-2 border-slate-300 dark:border-slate-600 bg-slate-50/50 dark:bg-slate-900/50"
-            } text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400`}
+            className="w-full p-4 rounded-xl resize-none transition-all duration-300 focus:outline-none bg-gray-950 text-white placeholder-gray-400"
             rows={4}
             placeholder="Describe the image you want to create in detail..."
           />
         </div>
 
-        <div
-          className={`absolute bottom-3 right-3 text-xs transition-all duration-300 ${
-            focused ? "text-indigo-500 dark:text-indigo-400" : "text-slate-400 dark:text-slate-500"
-          }`}
-        >
+        <div className="absolute bottom-3 right-3 text-xs text-gray-400">
           {prompt.length} characters
         </div>
       </div>
@@ -65,13 +62,25 @@ export default function PromptEditor({ prompt, setPrompt }: Props) {
 
       {(prompt || examplePrompts.length <= 0) && (
         <div className="mt-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2 text-sm text-slate-500 dark:text-slate-400">
-            <span>💡</span>
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
+            </svg>
             <span>Tip: Be specific and descriptive for better results</span>
           </div>
           <button
             onClick={() => setPrompt("")}
-            className="text-xs text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors duration-200"
+            className="text-xs text-gray-400 hover:text-red-400 transition-colors duration-200"
           >
             Clear
           </button>
