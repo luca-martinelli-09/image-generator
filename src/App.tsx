@@ -111,12 +111,12 @@ function App() {
           </div>
 
           {/* Output Section */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <h3 className="text-xl font-semibold text-white">
               Generated Images
             </h3>
             {outputs.length === 0 ? (
-              <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-12 text-center">
+              <div className="bg-neutral-950/50 backdrop-blur-sm border border-neutral-800 rounded-2xl p-12 text-center">
                 <svg
                   className="w-16 h-16 mx-auto mb-4 text-gray-400"
                   fill="none"

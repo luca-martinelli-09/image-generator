@@ -1,11 +1,11 @@
-import { useDropzone } from "react-dropzone";
 import { Reorder } from "framer-motion";
 import {
   type Dispatch,
   type SetStateAction,
-  useEffect,
   useCallback,
+  useEffect,
 } from "react";
+import { useDropzone } from "react-dropzone";
 
 export interface UploadedImage {
   id: number;
@@ -158,9 +158,21 @@ export default function ImageUploader({
                   onClick={() =>
                     setImages((prev) => prev.filter((i) => i.id !== img.id))
                   }
-                  className="absolute top-0 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs pointer-events-auto transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-110"
+                  className="absolute -top-1 -right-1 bg-gray-800 text-white rounded-full w-5 h-5 flex items-center justify-center pointer-events-auto shadow-lg border border-gray-600  transition-all duration-200 hover:scale-110"
                 >
-                  ×
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
                 </button>
               </Reorder.Item>
             ))}
