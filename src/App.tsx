@@ -1,12 +1,26 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ImageUploader, { type UploadedImage } from "./components/ImageUploader";
-import PromptEditor from "./components/PromptEditor";
 import ImageViewer from "./components/ImageViewer";
+import PromptEditor from "./components/PromptEditor";
 
 interface OutputFile {
   mimeType: string;
   base64: string;
   filename: string;
+}
+
+interface ProjectData {
+  prompt: string;
+  images: UploadedImage[];
+  timestamp: number;
+}
+
+interface SavedPrompt {
+  id: string;
+  title: string;
+  prompt: string;
+  images: UploadedImage[];
+  timestamp: number;
 }
 
 function App() {
@@ -16,19 +30,60 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [viewerImage, setViewerImage] = useState<string | null>(null);
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
+  const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([]);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveTitle, setSaveTitle] = useState("");
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
+
+    // Load saved project on mount
+    const saved = localStorage.getItem("image-generator-project");
+    if (saved) {
+      try {
+        const projectData: ProjectData = JSON.parse(saved);
+        setPrompt(projectData.prompt || "");
+        setImages(projectData.images || []);
+      } catch (error) {
+        console.error("Failed to load saved project:", error);
+      }
+    }
+
+    // Load saved prompts
+    const savedPromptsData = localStorage.getItem(
+      "image-generator-saved-prompts"
+    );
+    if (savedPromptsData) {
+      try {
+        setSavedPrompts(JSON.parse(savedPromptsData));
+      } catch (error) {
+        console.error("Failed to load saved prompts:", error);
+      }
+    }
   }, []);
+
+  // Auto-save to localStorage when prompt or images change
+  useEffect(() => {
+    const projectData: ProjectData = {
+      prompt,
+      images,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(
+      "image-generator-project",
+      JSON.stringify(projectData)
+    );
+  }, [prompt, images]);
 
   const generate = async () => {
     setLoading(true);
     setError("");
-    
+
     const controller = new AbortController();
     setAbortController(controller);
-    
+
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -49,7 +104,7 @@ function App() {
 
       setOutputs(data.outputs || []);
     } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
+      if (err instanceof Error && err.name === "AbortError") {
         setError("Generation cancelled");
       } else {
         setError(err instanceof Error ? err.message : "Unknown error occurred");
@@ -66,14 +121,166 @@ function App() {
     }
   };
 
+  const loadProject = useCallback((file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const projectData: ProjectData = JSON.parse(e.target?.result as string);
+        setPrompt(projectData.prompt || "");
+        setImages(projectData.images || []);
+        setError("");
+      } catch (error: unknown) {
+        console.log(error);
+        setError("Failed to load project file. Please check the file format.");
+      }
+    };
+    reader.readAsText(file);
+  }, []);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const files = Array.from(e.dataTransfer.files);
+    const jsonFile = files.find((file) => file.type === "application/json");
+
+    if (jsonFile) {
+      loadProject(jsonFile);
+    } else {
+      setError("Please drop a valid JSON project file.");
+    }
+  };
+
+  const saveCurrentPrompt = () => {
+    if (!prompt.trim()) {
+      setError("Please enter a prompt before saving.");
+      return;
+    }
+
+    const defaultTitle =
+      prompt.length > 50 ? prompt.substring(0, 47) + "..." : prompt;
+
+    setSaveTitle(defaultTitle);
+    setShowSaveModal(true);
+  };
+
+  const confirmSavePrompt = () => {
+    if (!saveTitle.trim()) {
+      setError("Please enter a title for the saved prompt.");
+      return;
+    }
+
+    const newPrompt: SavedPrompt = {
+      id: Date.now().toString(),
+      title: saveTitle.trim(),
+      prompt,
+      images,
+      timestamp: Date.now(),
+    };
+
+    const updatedPrompts = [...savedPrompts, newPrompt];
+    setSavedPrompts(updatedPrompts);
+    localStorage.setItem(
+      "image-generator-saved-prompts",
+      JSON.stringify(updatedPrompts)
+    );
+
+    setShowSaveModal(false);
+    setSaveTitle("");
+    setError("");
+  };
+
+  const loadSavedPrompt = (savedPrompt: SavedPrompt) => {
+    setPrompt(savedPrompt.prompt);
+    setImages(savedPrompt.images);
+  };
+
+  const deleteSavedPrompt = (id: string) => {
+    const updatedPrompts = savedPrompts.filter((p) => p.id !== id);
+    setSavedPrompts(updatedPrompts);
+    localStorage.setItem(
+      "image-generator-saved-prompts",
+      JSON.stringify(updatedPrompts)
+    );
+  };
+
+  const downloadSavedPrompt = (savedPrompt: SavedPrompt) => {
+    const blob = new Blob([JSON.stringify(savedPrompt, null, 2)], {
+      type: "application/json",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${savedPrompt.title
+      .replace(/[^a-z0-9]/gi, "_")
+      .toLowerCase()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSavedPromptsUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type === "application/json") {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target?.result as string);
+
+          // Check if it's a single saved prompt or an array
+          if (Array.isArray(data)) {
+            // It's an array of saved prompts
+            const newPrompts = data.filter(
+              (item) => item.id && item.title && item.prompt && item.timestamp
+            );
+            if (newPrompts.length > 0) {
+              const updatedPrompts = [...savedPrompts, ...newPrompts];
+              setSavedPrompts(updatedPrompts);
+              localStorage.setItem(
+                "image-generator-saved-prompts",
+                JSON.stringify(updatedPrompts)
+              );
+            }
+          } else if (data.id && data.title && data.prompt && data.timestamp) {
+            // It's a single saved prompt
+            const updatedPrompts = [...savedPrompts, data];
+            setSavedPrompts(updatedPrompts);
+            localStorage.setItem(
+              "image-generator-saved-prompts",
+              JSON.stringify(updatedPrompts)
+            );
+          } else {
+            setError("Invalid saved prompt file format.");
+          }
+        } catch (error: unknown) {
+          console.log(error);
+          setError("Failed to load saved prompts file.");
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      setError("Please select a valid JSON file.");
+    }
+    e.target.value = "";
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-950 to-neutral-950 transition-colors duration-300">
+    <div
+      className="min-h-screen bg-gradient-to-br from-neutral-950 to-neutral-950 transition-colors duration-300"
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="text-center mb-25">
-          <h1 className="text-3xl font-bold text-white">
-            AI Image Generator
-          </h1>
+          <h1 className="text-3xl font-bold text-white">🍌 Image Generator</h1>
         </div>
 
         {/* Main Content */}
@@ -237,6 +444,247 @@ function App() {
             )}
           </div>
         </div>
+
+        {/* Saved Prompts Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-white flex items-center">
+              Saved prompts
+            </h3>
+            <div className="flex gap-2">
+              <button
+                onClick={saveCurrentPrompt}
+                disabled={!prompt.trim()}
+                className="bg-blue-800 hover:bg-blue-700 disabled:bg-gray-900 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-all duration-200 disabled:cursor-not-allowed text-sm"
+                title="Save current prompt"
+              >
+                <svg
+                  className="w-4 h-4 inline mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Save
+              </button>
+              <label
+                className="bg-green-800 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer text-sm"
+                title="Upload saved prompts"
+              >
+                <svg
+                  className="w-4 h-4 inline mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                Upload
+                <input
+                  type="file"
+                  accept=".json"
+                  onChange={handleSavedPromptsUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+
+          {savedPrompts.length === 0 ? (
+            <div className="bg-gray-950/30 hover:bg-gray-950/50 border-2 border-dashed border-gray-600 hover:border-gray-500 rounded-xl p-12 text-center cursor-pointer transition-all duration-300 group">
+              <div className="space-y-3">
+                <svg
+                  className="w-12 h-12 mx-auto text-gray-400 group-hover:scale-110 transition-transform duration-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <div>
+                  <p className="text-white font-medium">No saved prompts yet</p>
+                  <p className="text-gray-400 text-sm mt-1">
+                    Save your favorite prompts to reuse them later
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {savedPrompts.map((savedPrompt) => (
+                <div
+                  key={savedPrompt.id}
+                  className="bg-gray-950/60 backdrop-blur-sm border border-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative group p-6"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-white font-semibold text-lg truncate">
+                        {savedPrompt.title}
+                      </h4>
+                      <p className="text-gray-300 mt-2 leading-relaxed">
+                        {savedPrompt.prompt}
+                      </p>
+                      <div className="flex items-center gap-6 mt-4 text-sm text-gray-400">
+                        <span className="flex items-center gap-2">
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          {new Date(savedPrompt.timestamp).toLocaleDateString()}
+                        </span>
+                        {savedPrompt.images.length > 0 && (
+                          <span className="flex items-center gap-2">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                              />
+                            </svg>
+                            {savedPrompt.images.length} image
+                            {savedPrompt.images.length !== 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <button
+                        onClick={() => loadSavedPrompt(savedPrompt)}
+                        className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-lg backdrop-blur-sm transition-all duration-200"
+                        title="Load this prompt"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => downloadSavedPrompt(savedPrompt)}
+                        className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-lg backdrop-blur-sm transition-all duration-200"
+                        title="Download as JSON"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => deleteSavedPrompt(savedPrompt.id)}
+                        className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-lg backdrop-blur-sm transition-all duration-200"
+                        title="Delete saved prompt"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Save Modal */}
+        {showSaveModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-xl p-6 w-full max-w-md animate-scale-in">
+              <h3 className="text-xl font-semibold text-white mb-4">
+                Save Prompt
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={saveTitle}
+                    onChange={(e) => setSaveTitle(e.target.value)}
+                    className="w-full p-3 bg-gray-950/30 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                    placeholder="Enter a title for this prompt"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowSaveModal(false)}
+                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-xl transition-all duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmSavePrompt}
+                    disabled={!saveTitle.trim()}
+                    className="flex-1 bg-blue-800 hover:bg-blue-700 disabled:bg-gray-900 disabled:opacity-50 text-white py-3 px-4 rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {viewerImage && (
           <ImageViewer src={viewerImage} onClose={() => setViewerImage(null)} />

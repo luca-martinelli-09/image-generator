@@ -4,6 +4,7 @@ import {
   type SetStateAction,
   useCallback,
   useEffect,
+  useState,
 } from "react";
 import { useDropzone } from "react-dropzone";
 
@@ -24,6 +25,7 @@ export default function ImageUploader({
   setImages,
   onImageClick,
 }: Props) {
+  const [isDragging, setIsDragging] = useState<string | null>(null);
   const processFiles = useCallback(
     (files: File[]) => {
       files.forEach((file, index) => {
@@ -137,13 +139,17 @@ export default function ImageUploader({
                 drag
                 whileDrag={{ scale: 1.05, zIndex: 1000, rotate: 3 }}
                 whileHover={{ scale: 1.02 }}
+                onDragStart={() => setIsDragging(img.id.toString())}
+                onDragEnd={() => setIsDragging(null)}
                 as="li"
               >
                 <div
                   className="relative overflow-hidden rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 cursor-pointer"
-                  onClick={() =>
-                    onImageClick?.(`data:${img.mimeType};base64,${img.base64}`)
-                  }
+                  onClick={() => {
+                    if (!isDragging) {
+                      onImageClick?.(`data:${img.mimeType};base64,${img.base64}`);
+                    }
+                  }}
                 >
                   <img
                     src={`data:${img.mimeType};base64,${img.base64}`}

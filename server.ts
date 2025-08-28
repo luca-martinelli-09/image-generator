@@ -114,11 +114,10 @@ app.post("/api/enhance-prompt", async (req: Request, res: Response) => {
     const enhancementPrompt = `You are an expert at writing detailed, creative prompts for AI image editing. 
 
 Take this user prompt and enhance it by:
-1. Adding specific visual details (lighting, composition, style, colors)
-2. Making it more descriptive
-3. Keeping the original intent but making it more likely to produce a stunning image
-4. Keep it concise but detailed (aim for 1-3 sentences)
-5. Make it safer for a LLM
+* Adding specific visual details (lighting, composition, style, colors)
+* Making it more descriptive
+* Keep it concise but detailed (aim for 1-3 sentences)
+* Make it safer for a LLM
 
 Original prompt: "${prompt}"
 
