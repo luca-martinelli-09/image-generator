@@ -7,12 +7,7 @@ import {
   useState,
 } from "react";
 import { useDropzone } from "react-dropzone";
-
-export interface UploadedImage {
-  id: number;
-  base64: string;
-  mimeType: string;
-}
+import type { UploadedImage } from "../types";
 
 interface Props {
   images: UploadedImage[];
@@ -79,7 +74,7 @@ export default function ImageUploader({
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-component="image-uploader">
       <h3 className="text-lg font-semibold text-white flex items-center">
         Images
       </h3>
