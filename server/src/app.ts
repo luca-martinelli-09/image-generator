@@ -1,4 +1,5 @@
 import express from "express";
+import path from "path";
 import { config } from "./config";
 import { globalErrorHandler } from "./middleware/errorHandler";
 import apiRoutes from "./routes";
@@ -10,8 +11,27 @@ export function createApp(): express.Application {
   // Middleware
   app.use(express.json({ limit: config.maxRequestSize }));
 
+  // Serve static files from client build (in production)
+  if (config.nodeEnv === "production") {
+    const clientPath = path.join(__dirname, "../client");
+    app.use(express.static(clientPath));
+  }
+
   // API routes
   app.use("/api", apiRoutes);
+
+  // Handle client-side routing (catch-all for non-API routes)
+  if (config.nodeEnv === "production") {
+    const clientPath = path.join(__dirname, "../client");
+    app.use((req, res, next) => {
+      // Only serve index.html for GET requests that don't start with /api and aren't static files
+      if (req.method === 'GET' && !req.path.startsWith('/api') && !path.extname(req.path)) {
+        res.sendFile(path.join(clientPath, "index.html"));
+      } else {
+        next();
+      }
+    });
+  }
 
   // Global error handler (must be last)
   app.use(globalErrorHandler);

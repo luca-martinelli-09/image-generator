@@ -6,6 +6,7 @@ dotenv.config({ path: path.join(process.cwd(), "../.env") });
 
 export const config = {
   port: process.env.PORT || 3000,
+  nodeEnv: process.env.NODE_ENV || "development",
   googleApiKey: process.env.GOOGLE_API_KEY,
   defaultModel: process.env.DEFAULT_MODEL || "gemini-2.5-flash-image-preview",
   promptEnhancementModel:
