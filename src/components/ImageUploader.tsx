@@ -16,9 +16,10 @@ export interface UploadedImage {
 interface Props {
   images: UploadedImage[];
   setImages: Dispatch<SetStateAction<UploadedImage[]>>;
+  onImageClick?: (src: string) => void;
 }
 
-export default function ImageUploader({ images, setImages }: Props) {
+export default function ImageUploader({ images, setImages, onImageClick }: Props) {
   const processFiles = useCallback(
     (files: File[]) => {
       files.forEach((file, index) => {
@@ -72,14 +73,14 @@ export default function ImageUploader({ images, setImages }: Props) {
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-2xl p-6 shadow-lg">
-      <h3 className="text-lg font-semibold text-slate-800 mb-4">
+    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-2xl p-6 shadow-lg">
+      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-4">
         📸 Source Images
       </h3>
 
       <div
         {...getRootProps()}
-        className="border-2 border-dashed border-indigo-300 hover:border-indigo-400 bg-indigo-50/50 hover:bg-indigo-50/80 rounded-xl p-8 text-center cursor-pointer transition-all duration-300 group"
+        className="border-2 border-dashed border-indigo-300 dark:border-indigo-600 hover:border-indigo-400 dark:hover:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-50/80 dark:hover:bg-indigo-900/30 rounded-xl p-8 text-center cursor-pointer transition-all duration-300 group"
       >
         <input {...getInputProps()} />
         <div className="space-y-3">
@@ -87,14 +88,14 @@ export default function ImageUploader({ images, setImages }: Props) {
             📁
           </div>
           <div>
-            <p className="text-slate-700 font-medium">
+            <p className="text-slate-700 dark:text-slate-300 font-medium">
               Drag & drop images here
             </p>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
               or click to browse • Paste with Ctrl+V
             </p>
           </div>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-slate-400 dark:text-slate-500">
             Supports: JPG, PNG, GIF, WebP
           </div>
         </div>
@@ -103,10 +104,10 @@ export default function ImageUploader({ images, setImages }: Props) {
       {images.length > 0 && (
         <div className="mt-6">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-slate-600">
+            <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
               {images.length} image{images.length !== 1 ? "s" : ""} uploaded
             </span>
-            <span className="text-xs text-slate-400">Drag to reorder</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">Drag to reorder</span>
           </div>
 
           <Reorder.Group
@@ -126,7 +127,8 @@ export default function ImageUploader({ images, setImages }: Props) {
                 whileHover={{ scale: 1.02 }}
                 as="li"
               >
-                <div className="relative overflow-hidden rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300">
+                <div className="relative overflow-hidden rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 cursor-pointer" 
+                     onClick={() => onImageClick?.(`data:${img.mimeType};base64,${img.base64}`)}>
                   <img
                     src={`data:${img.mimeType};base64,${img.base64}`}
                     className="h-24 w-24 object-cover pointer-events-none"
