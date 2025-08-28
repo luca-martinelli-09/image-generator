@@ -81,17 +81,20 @@ app.post("/api/generate", async (req: Request, res: Response) => {
 
 const PORT = process.env.PORT || 3000;
 const DEFAULT_API_KEY = process.env.GOOGLE_API_KEY;
-const DEFAULT_MODEL = process.env.DEFAULT_MODEL || "gemini-2.5-flash-image-preview";
+const DEFAULT_MODEL =
+  process.env.DEFAULT_MODEL || "gemini-2.5-flash-image-preview";
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-}).on('error', (err: NodeJS.ErrnoException) => {
-  if (err.code === 'EADDRINUSE') {
-    console.log(`Port ${PORT} is busy, trying ${Number(PORT) + 1}...`);
-    app.listen(Number(PORT) + 1, () => {
-      console.log(`Server running at http://localhost:${Number(PORT) + 1}`);
-    });
-  } else {
-    console.error('Server error:', err);
-  }
-});
+app
+  .listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  })
+  .on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.log(`Port ${PORT} is busy, trying ${Number(PORT) + 1}...`);
+      app.listen(Number(PORT) + 1, () => {
+        console.log(`Server running at http://localhost:${Number(PORT) + 1}`);
+      });
+    } else {
+      console.error("Server error:", err);
+    }
+  });
