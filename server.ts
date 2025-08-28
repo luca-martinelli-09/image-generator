@@ -74,9 +74,90 @@ app.post("/api/generate", async (req: Request, res: Response) => {
     res.json({ outputs });
   } catch (err: unknown) {
     console.error(err);
-    res
-      .status(500)
-      .json({ error: err instanceof Error ? err.message : "Unknown error" });
+    
+    // Enhanced error handling for Gemini API errors
+    if (err instanceof Error) {
+      const message = err.message.toLowerCase();
+      
+      // Check for specific Gemini API error patterns
+      if (message.includes('invalid_argument') || message.includes('400')) {
+        if (message.includes('failed_precondition') || message.includes('billing')) {
+          return res.status(400).json({ 
+            error: "API requires billing in your region. Enable billing in Google AI Studio.",
+            code: "REGION_BILLING_REQUIRED",
+            suggestion: "Visit Google AI Studio to enable billing for your project."
+          });
+        }
+        return res.status(400).json({ 
+          error: "Invalid request. Please check your prompt and images.",
+          code: "INVALID_REQUEST",
+          suggestion: "Verify your prompt format and uploaded images."
+        });
+      }
+      
+      if (message.includes('permission_denied') || message.includes('403')) {
+        return res.status(403).json({ 
+          error: "Invalid API key or insufficient permissions.",
+          code: "PERMISSION_DENIED",
+          suggestion: "Check your API key configuration."
+        });
+      }
+      
+      if (message.includes('not_found') || message.includes('404')) {
+        return res.status(404).json({ 
+          error: "Resource not found. Please try again.",
+          code: "NOT_FOUND",
+          suggestion: "Verify all referenced files exist."
+        });
+      }
+      
+      if (message.includes('resource_exhausted') || message.includes('429')) {
+        return res.status(429).json({ 
+          error: "Rate limit exceeded. Please wait and try again.",
+          code: "RATE_LIMITED",
+          suggestion: "Wait a moment before making another request.",
+          retryable: true
+        });
+      }
+      
+      if (message.includes('unavailable') || message.includes('503')) {
+        return res.status(503).json({ 
+          error: "Service temporarily unavailable.",
+          code: "SERVICE_UNAVAILABLE", 
+          suggestion: "Try again in a few moments or switch to a different model.",
+          retryable: true
+        });
+      }
+      
+      if (message.includes('deadline_exceeded') || message.includes('504')) {
+        return res.status(504).json({ 
+          error: "Request timed out. Try a shorter prompt.",
+          code: "TIMEOUT",
+          suggestion: "Reduce your prompt length or try again.",
+          retryable: true
+        });
+      }
+      
+      if (message.includes('internal') || message.includes('500')) {
+        return res.status(500).json({ 
+          error: "Server error. Try reducing context or switching models.",
+          code: "INTERNAL_ERROR",
+          suggestion: "Reduce input length or try Gemini 1.5 Flash model.",
+          retryable: true
+        });
+      }
+      
+      // Generic error with original message
+      return res.status(500).json({ 
+        error: err.message,
+        code: "UNKNOWN_ERROR"
+      });
+    }
+    
+    res.status(500).json({ 
+      error: "Unknown error occurred",
+      code: "UNKNOWN_ERROR"
+    });
   }
 });
 

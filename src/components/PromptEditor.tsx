@@ -53,14 +53,17 @@ export default function PromptEditor({ prompt, setPrompt }: Props) {
           {isEnhancing ? (
             <div className="size-8 border-4 border-gray-400 border-t-blue-500 border-r-yellow-500 border-b-red-500 border-l-green-500 rounded-full animate-spin"></div>
           ) : (
-            <svg className="size-8" fill="url(#gradient)" viewBox="0 0 24 24">
+            <svg className="size-8" fill="url(#conicGradient)" viewBox="0 0 24 24">
               <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#3B82F6" />
-                  <stop offset="33%" stopColor="#EAB308" />
-                  <stop offset="66%" stopColor="#EF4444" />
-                  <stop offset="100%" stopColor="#10B981" />
-                </linearGradient>
+                <defs>
+                  <linearGradient id="conicGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#3B82F6" />
+                    <stop offset="25%" stopColor="#EF4444" />
+                    <stop offset="50%" stopColor="#EAB308" />
+                    <stop offset="75%" stopColor="#10B981" />
+                    <stop offset="100%" stopColor="#3B82F6" />
+                  </linearGradient>
+                </defs>
               </defs>
               <path d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
@@ -68,7 +71,9 @@ export default function PromptEditor({ prompt, setPrompt }: Props) {
         </button>
       </div>
 
-      <div className="w-full bg-gradient-to-r from-blue-500 via-yellow-500 to-red-500 p-1 rounded-2xl">
+      <div className="w-full p-1 rounded-2xl" style={{
+        background: 'conic-gradient(from 0deg at 50% 50%, #3B82F6 0%, #EF4444 25%, #EAB308 50%, #10B981 75%, #3B82F6 100%)'
+      }}>
         <div className="relative bg-gray-950 rounded-xl">
           <textarea
             ref={textareaRef}
