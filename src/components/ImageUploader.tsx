@@ -19,7 +19,11 @@ interface Props {
   onImageClick?: (src: string) => void;
 }
 
-export default function ImageUploader({ images, setImages, onImageClick }: Props) {
+export default function ImageUploader({
+  images,
+  setImages,
+  onImageClick,
+}: Props) {
   const processFiles = useCallback(
     (files: File[]) => {
       files.forEach((file, index) => {
@@ -73,12 +77,9 @@ export default function ImageUploader({ images, setImages, onImageClick }: Props
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 shadow-lg">
-      <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        Source Images
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-white flex items-center">
+        Images
       </h3>
 
       <div
@@ -87,13 +88,21 @@ export default function ImageUploader({ images, setImages, onImageClick }: Props
       >
         <input {...getInputProps()} />
         <div className="space-y-3">
-          <svg className="w-12 h-12 mx-auto text-gray-400 group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          <svg
+            className="w-12 h-12 mx-auto text-gray-400 group-hover:scale-110 transition-transform duration-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+            />
           </svg>
           <div>
-            <p className="text-white font-medium">
-              Drag & drop images here
-            </p>
+            <p className="text-white font-medium">Drag & drop images here</p>
             <p className="text-gray-400 text-sm mt-1">
               or click to browse • Paste with Ctrl+V
             </p>
@@ -117,7 +126,7 @@ export default function ImageUploader({ images, setImages, onImageClick }: Props
             axis="x"
             values={images}
             onReorder={setImages}
-            className="flex gap-3 overflow-x-auto pb-2 list-none"
+            className="flex gap-3 overflow-x-auto overflow-y-hidden pb-2 pt-2 list-none"
             as="ul"
           >
             {images.map((img) => (
@@ -130,8 +139,12 @@ export default function ImageUploader({ images, setImages, onImageClick }: Props
                 whileHover={{ scale: 1.02 }}
                 as="li"
               >
-                <div className="relative overflow-hidden rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 cursor-pointer" 
-                     onClick={() => onImageClick?.(`data:${img.mimeType};base64,${img.base64}`)}>
+                <div
+                  className="relative overflow-hidden rounded-xl shadow-md group-hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  onClick={() =>
+                    onImageClick?.(`data:${img.mimeType};base64,${img.base64}`)
+                  }
+                >
                   <img
                     src={`data:${img.mimeType};base64,${img.base64}`}
                     className="h-24 w-24 object-cover pointer-events-none"

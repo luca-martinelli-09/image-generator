@@ -18,7 +18,7 @@ function App() {
   const [viewerImage, setViewerImage] = useState<string | null>(null);
 
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add("dark");
   }, []);
 
   const generate = async () => {
@@ -50,23 +50,22 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 to-gray-900 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-neutral-950 to-neutral-950 transition-colors duration-300">
       <div className="max-w-6xl mx-auto px-6 py-12">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold mb-4 text-white">AI Image Generator</h1>
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-            Transform your ideas into stunning visuals with the power of AI
-          </p>
+        <div className="text-center mb-25">
+          <h1 className="text-3xl font-bold text-white">
+            AI Image Generator
+          </h1>
         </div>
 
         {/* Main Content */}
         <div className="grid lg:grid-cols-2 gap-8 mb-8">
           {/* Input Section */}
           <div className="space-y-6">
-            <ImageUploader 
-              images={images} 
-              setImages={setImages} 
+            <ImageUploader
+              images={images}
+              setImages={setImages}
               onImageClick={setViewerImage}
             />
             <PromptEditor prompt={prompt} setPrompt={setPrompt} />
@@ -89,8 +88,18 @@ function App() {
             {error && (
               <div className="bg-red-900/20 border border-red-800 text-red-300 px-6 py-4 rounded-xl backdrop-blur-sm">
                 <div className="flex items-center space-x-2">
-                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  <svg
+                    className="w-5 h-5 text-red-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
                   </svg>
                   <div>
                     <strong className="font-semibold">Error:</strong>
@@ -103,13 +112,23 @@ function App() {
 
           {/* Output Section */}
           <div className="space-y-6">
-            <h3 className="text-2xl font-semibold text-white">
+            <h3 className="text-xl font-semibold text-white">
               Generated Images
             </h3>
             {outputs.length === 0 ? (
               <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-12 text-center">
-                <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <svg
+                  className="w-16 h-16 mx-auto mb-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
                 </svg>
                 <p className="text-gray-400 text-lg">
                   Your generated images will appear here
@@ -120,9 +139,16 @@ function App() {
                 {outputs.map((out) => (
                   <div
                     key={out.filename}
-                    className="bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 relative group"
+                    className="bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative group"
                   >
-                    <div className="relative overflow-hidden rounded-xl mb-4 cursor-pointer" onClick={() => setViewerImage(`data:${out.mimeType};base64,${out.base64}`)}>
+                    <div
+                      className="relative overflow-hidden rounded-xl cursor-pointer"
+                      onClick={() =>
+                        setViewerImage(
+                          `data:${out.mimeType};base64,${out.base64}`
+                        )
+                      }
+                    >
                       <img
                         src={`data:${out.mimeType};base64,${out.base64}`}
                         className="w-full h-auto object-cover"
@@ -130,14 +156,28 @@ function App() {
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300"></div>
                     </div>
-                    
-                    <div className="absolute bottom-6 right-6 flex gap-2">
+
+                    <div className="absolute bottom-2 right-2 flex gap-2">
                       <button
-                        onClick={() => setViewerImage(`data:${out.mimeType};base64,${out.base64}`)}
+                        onClick={() =>
+                          setViewerImage(
+                            `data:${out.mimeType};base64,${out.base64}`
+                          )
+                        }
                         className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-lg backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                          />
                         </svg>
                       </button>
                       <a
@@ -145,8 +185,18 @@ function App() {
                         download={out.filename}
                         className="bg-black/60 hover:bg-black/80 text-white p-2 rounded-lg backdrop-blur-sm transition-all duration-200 opacity-0 group-hover:opacity-100"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                          />
                         </svg>
                       </a>
                     </div>
@@ -156,12 +206,9 @@ function App() {
             )}
           </div>
         </div>
-        
+
         {viewerImage && (
-          <ImageViewer 
-            src={viewerImage} 
-            onClose={() => setViewerImage(null)} 
-          />
+          <ImageViewer src={viewerImage} onClose={() => setViewerImage(null)} />
         )}
       </div>
     </div>
