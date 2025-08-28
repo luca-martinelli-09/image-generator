@@ -20,6 +20,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout repository
@@ -53,6 +55,7 @@ jobs:
             org.opencontainers.image.vendor=Image Generator Team
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
