@@ -16,6 +16,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>("");
   const [viewerImage, setViewerImage] = useState<string | null>(null);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
@@ -24,11 +25,16 @@ function App() {
   const generate = async () => {
     setLoading(true);
     setError("");
+    
+    const controller = new AbortController();
+    setAbortController(controller);
+    
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, images }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -43,9 +49,20 @@ function App() {
 
       setOutputs(data.outputs || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error occurred");
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError("Generation cancelled");
+      } else {
+        setError(err instanceof Error ? err.message : "Unknown error occurred");
+      }
     } finally {
       setLoading(false);
+      setAbortController(null);
+    }
+  };
+
+  const cancelGeneration = () => {
+    if (abortController) {
+      abortController.abort();
     }
   };
 
@@ -70,20 +87,34 @@ function App() {
             />
             <PromptEditor prompt={prompt} setPrompt={setPrompt} />
 
-            <button
-              onClick={generate}
-              disabled={loading}
-              className="w-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 text-white font-medium py-4 px-8 rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Generating...</span>
-                </div>
-              ) : (
-                "Generate Images"
-              )}
-            </button>
+            {loading ? (
+              <div className="space-y-3">
+                <button
+                  onClick={generate}
+                  disabled={loading}
+                  className="w-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 text-white font-medium py-4 px-8 rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Generating...</span>
+                  </div>
+                </button>
+                <button
+                  onClick={cancelGeneration}
+                  className="w-full bg-red-800 hover:bg-red-700 text-white font-medium py-2 px-8 rounded-xl transition-all duration-200"
+                >
+                  Cancel Generation
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={generate}
+                disabled={loading || (!prompt.trim() && images.length === 0)}
+                className="w-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 text-white font-medium py-4 px-8 rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
+              >
+                Generate Images
+              </button>
+            )}
 
             {error && (
               <div className="bg-red-900/20 border border-red-800 text-red-300 px-6 py-4 rounded-xl backdrop-blur-sm">
