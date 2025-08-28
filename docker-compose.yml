@@ -1,17 +1,14 @@
-version: '3.8'
-
 services:
   image-generator:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
-    container_name: image-generator
     ports:
-      - "3001:3000"  # Application port (serves both client and API)
+      - "3001:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
-      # Add your environment variables here
+
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - DEFAULT_MODEL=${DEFAULT_MODEL:-gemini-2.5-flash-image-preview}
       - PROMPT_ENHANCEMENT_MODEL=${PROMPT_ENHANCEMENT_MODEL:-gemini-2.5-flash}
@@ -19,20 +16,16 @@ services:
       - .env
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/api/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    volumes:
-      # Optional: Mount logs directory for debugging
-      - ./logs:/app/logs
-    networks:
-      - image-generator-network
-
-networks:
-  image-generator-network:
-    driver: bridge
-
-# Development override (use docker-compose -f docker-compose.yml -f docker-compose.dev.yml up)
-# This extends the base configuration for development
