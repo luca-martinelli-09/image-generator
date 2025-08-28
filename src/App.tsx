@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import ImageUploader, { type UploadedImage } from "./components/ImageUploader";
 import ImageViewer from "./components/ImageViewer";
 import PromptEditor from "./components/PromptEditor";
+import { indexedDBStorage } from "./utils/indexedDB";
 
 interface OutputFile {
   mimeType: string;
@@ -64,17 +65,42 @@ function App() {
       }
     }
 
-    // Load saved prompts
-    const savedPromptsData = localStorage.getItem(
-      "image-generator-saved-prompts"
-    );
-    if (savedPromptsData) {
+    // Load saved prompts from IndexedDB
+    const loadSavedPrompts = async () => {
       try {
-        setSavedPrompts(JSON.parse(savedPromptsData));
+        const prompts = await indexedDBStorage.getAllPrompts();
+        setSavedPrompts(prompts);
       } catch (error) {
-        console.error("Failed to load saved prompts:", error);
+        console.error("Failed to load saved prompts from IndexedDB:", error);
+        // Fallback to localStorage if IndexedDB fails
+        try {
+          const savedPromptsData = localStorage.getItem(
+            "image-generator-saved-prompts"
+          );
+          if (savedPromptsData) {
+            const localPrompts = JSON.parse(savedPromptsData);
+            setSavedPrompts(localPrompts);
+            // Migrate to IndexedDB
+            for (const prompt of localPrompts) {
+              try {
+                await indexedDBStorage.savePrompt(prompt);
+              } catch (err) {
+                console.error("Failed to migrate prompt to IndexedDB:", err);
+              }
+            }
+            // Clear localStorage after migration
+            localStorage.removeItem("image-generator-saved-prompts");
+          }
+        } catch (localStorageError) {
+          console.error(
+            "Failed to load from localStorage fallback:",
+            localStorageError
+          );
+        }
       }
-    }
+    };
+
+    loadSavedPrompts();
   }, []);
 
   // Auto-save to localStorage when prompt or images change
@@ -217,7 +243,7 @@ function App() {
     setShowSaveModal(true);
   };
 
-  const confirmSavePrompt = () => {
+  const confirmSavePrompt = async () => {
     if (!saveTitle.trim()) {
       setError("Please enter a title for the saved prompt.");
       return;
@@ -232,12 +258,16 @@ function App() {
       timestamp: Date.now(),
     };
 
-    const updatedPrompts = [...savedPrompts, newPrompt];
-    setSavedPrompts(updatedPrompts);
-    localStorage.setItem(
-      "image-generator-saved-prompts",
-      JSON.stringify(updatedPrompts)
-    );
+    // Save to IndexedDB
+    try {
+      await indexedDBStorage.savePrompt(newPrompt);
+      const updatedPrompts = [...savedPrompts, newPrompt];
+      setSavedPrompts(updatedPrompts);
+    } catch (error) {
+      console.error("Failed to save prompt to IndexedDB:", error);
+      setError("Failed to save prompt. Please try again.");
+      return;
+    }
 
     setModalClosing(true);
     setTimeout(() => {
@@ -256,13 +286,15 @@ function App() {
     }
   };
 
-  const deleteSavedPrompt = (id: string) => {
-    const updatedPrompts = savedPrompts.filter((p) => p.id !== id);
-    setSavedPrompts(updatedPrompts);
-    localStorage.setItem(
-      "image-generator-saved-prompts",
-      JSON.stringify(updatedPrompts)
-    );
+  const deleteSavedPrompt = async (id: string) => {
+    try {
+      await indexedDBStorage.deletePrompt(id);
+      const updatedPrompts = savedPrompts.filter((p) => p.id !== id);
+      setSavedPrompts(updatedPrompts);
+    } catch (error) {
+      console.error("Failed to delete prompt from IndexedDB:", error);
+      setError("Failed to delete prompt. Please try again.");
+    }
   };
 
   const downloadSavedPrompt = (savedPrompt: SavedPrompt) => {
@@ -286,7 +318,7 @@ function App() {
     const file = e.target.files?.[0];
     if (file && file.type === "application/json") {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         try {
           const data = JSON.parse(event.target?.result as string);
 
@@ -297,21 +329,28 @@ function App() {
               (item) => item.id && item.title && item.prompt && item.timestamp
             );
             if (newPrompts.length > 0) {
-              const updatedPrompts = [...savedPrompts, ...newPrompts];
-              setSavedPrompts(updatedPrompts);
-              localStorage.setItem(
-                "image-generator-saved-prompts",
-                JSON.stringify(updatedPrompts)
-              );
+              try {
+                // Save each prompt to IndexedDB
+                for (const prompt of newPrompts) {
+                  await indexedDBStorage.savePrompt(prompt);
+                }
+                const updatedPrompts = [...savedPrompts, ...newPrompts];
+                setSavedPrompts(updatedPrompts);
+              } catch (error) {
+                console.error("Failed to save uploaded prompts:", error);
+                setError("Failed to save some uploaded prompts.");
+              }
             }
           } else if (data.id && data.title && data.prompt && data.timestamp) {
             // It's a single saved prompt
-            const updatedPrompts = [...savedPrompts, data];
-            setSavedPrompts(updatedPrompts);
-            localStorage.setItem(
-              "image-generator-saved-prompts",
-              JSON.stringify(updatedPrompts)
-            );
+            try {
+              await indexedDBStorage.savePrompt(data);
+              const updatedPrompts = [...savedPrompts, data];
+              setSavedPrompts(updatedPrompts);
+            } catch (error) {
+              console.error("Failed to save uploaded prompt:", error);
+              setError("Failed to save uploaded prompt.");
+            }
           } else {
             setError("Invalid saved prompt file format.");
           }
@@ -642,7 +681,7 @@ function App() {
             <div className="grid gap-4">
               {savedPrompts
                 .slice()
-                .reverse()
+                .sort((a, b) => b.timestamp - a.timestamp)
                 .map((savedPrompt) => (
                   <div
                     key={savedPrompt.id}

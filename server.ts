@@ -58,6 +58,47 @@ app.post("/api/generate", async (req: Request, res: Response) => {
     }[] = [];
 
     for await (const chunk of response) {
+      // Check for finish reasons that indicate errors or blocks
+      const candidate = chunk.candidates?.[0];
+      if (candidate?.finishReason) {
+        switch (candidate.finishReason) {
+          case 'PROHIBITED_CONTENT':
+            return res.status(400).json({
+              error: "Content policy violation. Your prompt or images contain prohibited content.",
+              code: "PROHIBITED_CONTENT",
+              suggestion: "Please modify your prompt to avoid inappropriate, harmful, or policy-violating content.",
+              retryable: false
+            });
+          case 'SAFETY':
+            return res.status(400).json({
+              error: "Content blocked by safety filters.",
+              code: "SAFETY_BLOCKED",
+              suggestion: "Please revise your prompt to ensure it's safe and appropriate.",
+              retryable: false
+            });
+          case 'RECITATION':
+            return res.status(400).json({
+              error: "Content blocked due to recitation concerns.",
+              code: "RECITATION_BLOCKED",
+              suggestion: "Please use more original content in your prompt.",
+              retryable: false
+            });
+          case 'OTHER':
+            return res.status(400).json({
+              error: "Content generation was blocked for an unspecified reason.",
+              code: "CONTENT_BLOCKED",
+              suggestion: "Please try rephrasing your prompt or using different images.",
+              retryable: true
+            });
+          case 'MAX_TOKENS':
+            return res.status(400).json({
+              error: "Response was truncated due to length limits.",
+              code: "MAX_TOKENS",
+              suggestion: "Try using a shorter prompt or fewer images.",
+              retryable: true
+            });
+        }
+      }
 
       const inlineData = chunk.candidates?.[0]?.content?.parts?.[0]?.inlineData;
       if (inlineData && inlineData.mimeType && inlineData.data) {
@@ -71,9 +112,26 @@ app.post("/api/generate", async (req: Request, res: Response) => {
       }
     }
 
+    // Check if no outputs were generated
+    if (outputs.length === 0) {
+      return res.status(400).json({
+        error: "No images were generated. The request may have been blocked or failed.",
+        code: "NO_OUTPUT",
+        suggestion: "Try a different prompt or check if your content meets content policy guidelines.",
+        retryable: true
+      });
+    }
+
     res.json({ outputs });
   } catch (err: unknown) {
-    console.error(err);
+    console.error('Full error details:', {
+      error: err,
+      message: err instanceof Error ? err.message : 'Unknown error',
+      stack: err instanceof Error ? err.stack : undefined,
+      type: typeof err,
+      name: err instanceof Error ? err.name : undefined,
+      timestamp: new Date().toISOString()
+    });
     
     // Enhanced error handling for Gemini API errors
     if (err instanceof Error) {
