@@ -20,6 +20,7 @@ interface SavedPrompt {
   title: string;
   prompt: string;
   images: UploadedImage[];
+  outputs?: OutputFile[];
   timestamp: number;
 }
 
@@ -35,6 +36,7 @@ function App() {
   const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([]);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveTitle, setSaveTitle] = useState("");
+  const [modalClosing, setModalClosing] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
@@ -180,6 +182,7 @@ function App() {
       title: saveTitle.trim(),
       prompt,
       images,
+      outputs: outputs.length > 0 ? outputs : undefined,
       timestamp: Date.now(),
     };
 
@@ -190,14 +193,21 @@ function App() {
       JSON.stringify(updatedPrompts)
     );
 
-    setShowSaveModal(false);
-    setSaveTitle("");
-    setError("");
+    setModalClosing(true);
+    setTimeout(() => {
+      setShowSaveModal(false);
+      setModalClosing(false);
+      setSaveTitle("");
+      setError("");
+    }, 200);
   };
 
   const loadSavedPrompt = (savedPrompt: SavedPrompt) => {
     setPrompt(savedPrompt.prompt);
     setImages(savedPrompt.images);
+    if (savedPrompt.outputs) {
+      setOutputs(savedPrompt.outputs);
+    }
   };
 
   const deleteSavedPrompt = (id: string) => {
@@ -310,7 +320,7 @@ function App() {
                   onClick={cancelGeneration}
                   className="w-full bg-red-800 hover:bg-red-700 text-white font-medium py-2 px-8 rounded-xl transition-all duration-200"
                 >
-                  Cancel Generation
+                  Stop generation
                 </button>
               </div>
             ) : (
@@ -319,30 +329,55 @@ function App() {
                 disabled={loading || (!prompt.trim() && images.length === 0)}
                 className="w-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-900 text-white font-medium py-4 px-8 rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
               >
-                Generate Images
+                Generate
               </button>
             )}
 
             {error && (
-              <div className="bg-red-900/20 border border-red-800 text-red-300 px-6 py-4 rounded-xl backdrop-blur-sm">
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-5 h-5 text-red-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                    />
-                  </svg>
-                  <div>
-                    <strong className="font-semibold">Error:</strong>
-                    <p className="mt-1">{error}</p>
+              <div className="bg-red-950/30 backdrop-blur-sm border border-red-800/50 rounded-2xl p-4 animate-fade-in">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-red-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                      />
+                    </svg>
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-red-400 mb-1">
+                      Something went wrong
+                    </h4>
+                    <p className="text-sm text-red-300/90 leading-relaxed">
+                      {error}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setError("")}
+                    className="flex-shrink-0 text-red-400/60 hover:text-red-400 transition-colors duration-200 p-1"
+                    title="Dismiss error"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </div>
             )}
@@ -572,10 +607,30 @@ function App() {
                                 d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                               />
                             </svg>
-                            {savedPrompt.images.length} image
+                            {savedPrompt.images.length} input
                             {savedPrompt.images.length !== 1 ? "s" : ""}
                           </span>
                         )}
+                        {savedPrompt.outputs &&
+                          savedPrompt.outputs.length > 0 && (
+                            <span className="flex items-center gap-2">
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              {savedPrompt.outputs.length} output
+                              {savedPrompt.outputs.length !== 1 ? "s" : ""}
+                            </span>
+                          )}
                       </div>
                     </div>
 
@@ -647,10 +702,18 @@ function App() {
 
         {/* Save Modal */}
         {showSaveModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
-            <div className="bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-xl p-6 w-full max-w-md animate-scale-in">
+          <div
+            className={`fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 ${
+              modalClosing ? "animate-fade-out" : "animate-fade-in"
+            }`}
+          >
+            <div
+              className={`bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-xl p-6 w-full max-w-md ${
+                modalClosing ? "animate-scale-out" : "animate-scale-in"
+              }`}
+            >
               <h3 className="text-xl font-semibold text-white mb-4">
-                Save Prompt
+                Save prompt
               </h3>
               <div className="space-y-4">
                 <div>
@@ -668,7 +731,14 @@ function App() {
                 </div>
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setShowSaveModal(false)}
+                    onClick={() => {
+                      setModalClosing(true);
+                      setTimeout(() => {
+                        setShowSaveModal(false);
+                        setModalClosing(false);
+                        setSaveTitle("");
+                      }, 200);
+                    }}
                     className="flex-1 bg-gray-800 hover:bg-gray-700 text-white py-3 px-4 rounded-xl transition-all duration-200"
                   >
                     Cancel

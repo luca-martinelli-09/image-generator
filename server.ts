@@ -46,11 +46,6 @@ app.post("/api/generate", async (req: Request, res: Response) => {
       },
     ];
 
-    // Handle client disconnect
-    req.on('close', () => {
-      console.log('Client disconnected, cancelling generation');
-    });
-
     const response = await ai.models.generateContentStream({
       model: finalModel,
       contents,
@@ -63,11 +58,6 @@ app.post("/api/generate", async (req: Request, res: Response) => {
     }[] = [];
 
     for await (const chunk of response) {
-      // Check if client disconnected
-      if (req.destroyed || res.destroyed) {
-        console.log('Request cancelled, stopping generation');
-        break;
-      }
 
       const inlineData = chunk.candidates?.[0]?.content?.parts?.[0]?.inlineData;
       if (inlineData && inlineData.mimeType && inlineData.data) {
@@ -81,17 +71,12 @@ app.post("/api/generate", async (req: Request, res: Response) => {
       }
     }
 
-    // Only send response if client is still connected
-    if (!res.destroyed) {
-      res.json({ outputs });
-    }
+    res.json({ outputs });
   } catch (err: unknown) {
     console.error(err);
-    if (!res.destroyed) {
-      res
-        .status(500)
-        .json({ error: err instanceof Error ? err.message : "Unknown error" });
-    }
+    res
+      .status(500)
+      .json({ error: err instanceof Error ? err.message : "Unknown error" });
   }
 });
 
