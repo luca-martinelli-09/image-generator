@@ -14,8 +14,8 @@ interface Props {
 }
 
 export default function ImageUploader({ images, setImages }: Props) {
-  const onDrop = (acceptedFiles: File[]) => {
-    acceptedFiles.forEach((file, index) => {
+  const processFiles = (files: File[]) => {
+    files.forEach((file, index) => {
       const reader = new FileReader();
       reader.onload = () => {
         setImages((prev) => [
@@ -30,6 +30,36 @@ export default function ImageUploader({ images, setImages }: Props) {
       reader.readAsDataURL(file);
     });
   };
+
+  const onDrop = (acceptedFiles: File[]) => {
+    processFiles(acceptedFiles);
+  };
+
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const imageFiles: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            imageFiles.push(file);
+          }
+        }
+      }
+
+      if (imageFiles.length > 0) {
+        e.preventDefault();
+        processFiles(imageFiles);
+      }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, []);
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
