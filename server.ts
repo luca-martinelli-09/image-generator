@@ -30,7 +30,6 @@ app.post("/api/generate", async (req: Request, res: Response) => {
     }
 
     const ai = new GoogleGenAI({ apiKey: finalApiKey });
-    const config = { responseModalities: ["IMAGE", "TEXT"] };
 
     const contents = [
       {
@@ -49,7 +48,6 @@ app.post("/api/generate", async (req: Request, res: Response) => {
 
     const response = await ai.models.generateContentStream({
       model: finalModel,
-      config,
       contents,
     });
 

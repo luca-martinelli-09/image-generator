@@ -1,6 +1,6 @@
 import { useDropzone } from "react-dropzone";
 import { Reorder } from "framer-motion";
-import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useCallback } from "react";
 
 export interface UploadedImage {
   id: number;
@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function ImageUploader({ images, setImages }: Props) {
-  const processFiles = (files: File[]) => {
+  const processFiles = useCallback((files: File[]) => {
     files.forEach((file, index) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -29,7 +29,7 @@ export default function ImageUploader({ images, setImages }: Props) {
       };
       reader.readAsDataURL(file);
     });
-  };
+  }, [setImages]);
 
   const onDrop = (acceptedFiles: File[]) => {
     processFiles(acceptedFiles);
@@ -59,7 +59,7 @@ export default function ImageUploader({ images, setImages }: Props) {
 
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
-  }, []);
+  }, [processFiles]);
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
