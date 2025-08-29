@@ -1,4 +1,4 @@
-# 🎨 AI Image Generator
+# 🍌 AI Image Generator
 
 A powerful, full-stack web application for AI-powered image generation and enhancement using Google's Generative AI. Built with React, TypeScript, and Express, featuring a modern interface with drag-and-drop functionality and project management capabilities.
 

@@ -37,7 +37,7 @@ export default function OutputGrid({ outputs, onImageClick }: Props) {
           className="bg-gray-900/80 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 relative group"
         >
           <div
-            className="relative overflow-hidden rounded-xl cursor-pointer"
+            className="relative overflow-hidden rounded-2xl cursor-pointer"
             onClick={() =>
               onImageClick(`data:${out.mimeType};base64,${out.base64}`)
             }

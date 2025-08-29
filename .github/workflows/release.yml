@@ -107,6 +107,9 @@ jobs:
       contents: read
       packages: read
       security-events: write
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}
 
     steps:
       - name: Run Trivy vulnerability scanner
