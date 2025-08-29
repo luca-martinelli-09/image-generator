@@ -84,7 +84,7 @@ export default function PromptEditor({ prompt, setPrompt }: Props) {
         }}
       >
         <div className="relative bg-gray-950 rounded-xl">
-          <div className="p-4 pb-8">
+          <div className="p-4 pb-13">
             <CodeMirror
               value={prompt}
               onChange={(value) => setPrompt(value)}
