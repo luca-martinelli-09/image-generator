@@ -103,6 +103,7 @@ jobs:
   security-scan:
     runs-on: ubuntu-latest
     needs: build-and-publish
+    if: ${{ needs.build-and-publish.result == 'success' }}
     permissions:
       contents: read
       packages: read
@@ -112,6 +113,13 @@ jobs:
       IMAGE_NAME: ${{ github.repository }}
 
     steps:
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
