@@ -29,17 +29,10 @@ export async function enhancePrompt(
 
     const ai = new GoogleGenAI({ apiKey: config.googleApiKey });
 
-    const enhancementPrompt = `You are an expert at writing detailed, creative prompts for AI image editing. 
-
-Take this user prompt and enhance it by:
-* Adding specific visual details (lighting, composition, style, colors)
-* Making it more descriptive
-* Keep it concise but detailed (aim for 1-3 sentences)
-* Make it safer for a LLM
-
-Original prompt: "${prompt}"
-
-Enhanced prompt:`;
+    const enhancementPrompt = config.enhancementPrompt.replace(
+      "{prompt}",
+      prompt
+    );
 
     const contents = [
       {

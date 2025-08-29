@@ -12,6 +12,7 @@ services:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - DEFAULT_MODEL=${DEFAULT_MODEL:-gemini-2.5-flash-image-preview}
       - PROMPT_ENHANCEMENT_MODEL=${PROMPT_ENHANCEMENT_MODEL:-gemini-2.5-flash}
+      - ENHANCEMENT_PROMPT=${ENHANCEMENT_PROMPT}
     env_file:
       - .env
     restart: unless-stopped

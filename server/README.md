@@ -64,6 +64,25 @@ PORT=3000
 GOOGLE_API_KEY=your_api_key_here
 DEFAULT_MODEL=gemini-2.5-flash-image-preview
 PROMPT_ENHANCEMENT_MODEL=gemini-2.5-flash
+ENHANCEMENT_PROMPT=your_custom_enhancement_prompt_here
+```
+
+In ENHANCEMENT_PROMPT, use `{prompt}` to refer to the original user's prompt.
+
+Example:
+
+```
+You are an expert at writing detailed, creative prompts for AI image editing. 
+
+Take this user prompt and enhance it by:
+* Adding specific visual details (lighting, composition, style, colors)
+* Making it more descriptive
+* Keep it concise but detailed (aim for 1-3 sentences)
+* Make it safer for a LLM
+
+Original prompt: "{prompt}"
+
+Enhanced prompt:
 ```
 
 ## 📡 API Endpoints
